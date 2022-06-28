@@ -10,15 +10,10 @@ import MapKit
 import LocalAuthentication
 
 
-struct Location: Identifiable, Codable, Equatable{
-	let id: UUID
-	let name: String
-	var description: String
-	let latitude: Double
-	let longitude: Double
-}
+
 
 struct ContentView: View {
+	@State private var selectedPlace: Location?
 	
 	@State private var mapRegion = MKCoordinateRegion(
 		center: CLLocationCoordinate2D(latitude: 51.5, longitude: 0),
@@ -32,7 +27,22 @@ struct ContentView: View {
     var body: some View {
 		 ZStack{
 			 Map(coordinateRegion: $mapRegion, annotationItems: locations) { location in
-				 MapMarker(coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude))
+//				 MapMarker(coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude))
+				 MapAnnotation(coordinate: location.coordinate) {
+					 VStack{
+						 Image(systemName: "star.circle")
+							 .resizable()
+							 .foregroundColor(.red)
+							 .frame(width: 44, height: 44)
+							 .background(.white)
+							 .clipShape(Circle())
+						 Text(location.name)
+							 .fixedSize()
+					 }
+					 .onTapGesture {
+						 selectedPlace = location
+					 }
+				 }
 			 }
 				 .ignoresSafeArea()
 			 Circle()
@@ -56,6 +66,15 @@ struct ContentView: View {
 					 .font(.title)
 					 .clipShape(Circle())
 					 .padding(.trailing)
+				 }
+			 }
+			 
+		 }
+		 .sheet(item: $selectedPlace) { place in
+			 Text(place.name)
+			 EditView(location: place) { newLocation in
+				 if let index = locations.firstIndex(of: place) {
+					 locations[index] = newLocation
 				 }
 			 }
 		 }
