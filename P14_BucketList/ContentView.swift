@@ -10,35 +10,56 @@ import MapKit
 import LocalAuthentication
 
 
-struct Location: Identifiable{
-	let id = UUID()
+struct Location: Identifiable, Codable, Equatable{
+	let id: UUID
 	let name: String
-	let coordinate: CLLocationCoordinate2D
+	var description: String
+	let latitude: Double
+	let longitude: Double
 }
 
 struct ContentView: View {
 	
 	@State private var mapRegion = MKCoordinateRegion(
-		center: CLLocationCoordinate2D(latitude: 51.5, longitude: -0.12),
-		span: MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.2))
+		center: CLLocationCoordinate2D(latitude: 51.5, longitude: 0),
+		span: MKCoordinateSpan(latitudeDelta: 25, longitudeDelta: 25))
 	
 	@State private var isUnlocked = false
 	
-	let locations = [
-		Location(name: "Buckingham Palace", coordinate: CLLocationCoordinate2D(latitude: 51.501, longitude: -0.141)),
-		Location(name: "Tower of London", coordinate: CLLocationCoordinate2D(latitude: 51.508, longitude: -0.076))
-	]
+	@State private var locations = [Location]()
 	
 	
     var body: some View {
-		 VStack{
-			 if isUnlocked {
-				 Text("Unlocked")
-			 }else{
-				 Text("Locked")
+		 ZStack{
+			 Map(coordinateRegion: $mapRegion, annotationItems: locations) { location in
+				 MapMarker(coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude))
+			 }
+				 .ignoresSafeArea()
+			 Circle()
+				 .fill(.blue)
+				 .opacity(0.3)
+				 .frame(width: 32, height: 32)
+			 VStack{
+				 Spacer()
+				 HStack{
+					 Spacer()
+					 Button {
+						 //Create new location
+						 let newLocation = Location(id: UUID(), name: "New Location", description: "", latitude: mapRegion.center.latitude, longitude: mapRegion.center.longitude)
+						 locations.append(newLocation)
+					 } label: {
+						 Image(systemName: "plus")
+					 }
+					 .padding()
+					 .background(.black.opacity(0.75))
+					 .foregroundColor(.white)
+					 .font(.title)
+					 .clipShape(Circle())
+					 .padding(.trailing)
+				 }
 			 }
 		 }
-		 .onAppear(perform: authenticate)
+		 
     }
 	
 	func getDocumentsDirectory() -> URL {
