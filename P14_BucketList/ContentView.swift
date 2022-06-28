@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MapKit
+import LocalAuthentication
 
 
 struct Location: Identifiable{
@@ -21,6 +22,8 @@ struct ContentView: View {
 		center: CLLocationCoordinate2D(latitude: 51.5, longitude: -0.12),
 		span: MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.2))
 	
+	@State private var isUnlocked = false
+	
 	let locations = [
 		Location(name: "Buckingham Palace", coordinate: CLLocationCoordinate2D(latitude: 51.501, longitude: -0.141)),
 		Location(name: "Tower of London", coordinate: CLLocationCoordinate2D(latitude: 51.508, longitude: -0.076))
@@ -28,27 +31,14 @@ struct ContentView: View {
 	
 	
     var body: some View {
-		 NavigationView{
-			 Map(coordinateRegion: $mapRegion, annotationItems:  locations){ location in
-				 //MapMarker(coordinate: location.coordinate)
-				 MapAnnotation(coordinate: location.coordinate) {
-	//				 Circle()
-	//					 .stroke(.red, lineWidth: 3)
-	//					 .frame(width: 44, height: 44)
-	//					 .onTapGesture {
-	//						 print("Tapped on \(location.name)")
-	//					 }
-					 NavigationLink{
-						 Text(location.name)
-					 } label: {
-						 Circle()
-						 .stroke(.red, lineWidth: 3)
-						 .frame(width: 44, height: 44)
-					 }
-				 }
+		 VStack{
+			 if isUnlocked {
+				 Text("Unlocked")
+			 }else{
+				 Text("Locked")
 			 }
-			 .navigationTitle("London Explorer")
 		 }
+		 .onAppear(perform: authenticate)
     }
 	
 	func getDocumentsDirectory() -> URL {
@@ -56,6 +46,28 @@ struct ContentView: View {
 		let paths = FileManager.default.urls(for: .documentDirectory , in: .userDomainMask)
 		//Just send back the first one, which ought to be the only one
 		return paths[0]
+	}
+	
+	func authenticate(){
+		let context = LAContext()
+		var error : NSError?
+		
+		//Check whether biometric authentication is possible
+		if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
+			//it's possible, so go ahead and use it.
+			let reason = "We need to unlock your data."
+			context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, authenticationError in
+				// authentication has now completed
+				if success{
+					//authenticated successfully
+					isUnlocked = true
+				}else {
+					//there was a problem
+				}
+			}
+		}else {
+			//no biomentrics
+		}
 	}
 }
 
