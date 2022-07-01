@@ -19,6 +19,7 @@ extension ContentView {
 			span: MKCoordinateSpan(latitudeDelta: 25, longitudeDelta: 25))
 		
 		@Published var isUnlocked = false
+		@Published var authenticationErrorMessage = ""
 		
 		@Published private(set) var locations : [Location]
 		
@@ -62,6 +63,7 @@ extension ContentView {
 			let context = LAContext()
 			var error : NSError?
 			
+			
 			//Check whether biometric authentication is possible
 			if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
 				//it's possible, so go ahead and use it.
@@ -77,10 +79,12 @@ extension ContentView {
 						}
 					}else {
 						//there was a problem
+						self.authenticationErrorMessage = "There was a problem during authentication."
 					}
 				}
 			}else {
 				//no biomentrics
+				self.authenticationErrorMessage = "No biomentircs available."
 			}
 		}
 		

@@ -15,7 +15,7 @@ import MapKit
 struct ContentView: View {
 	
 	@StateObject private var viewModel = ViewModel()
-	
+	@State private var showingAlert = false
 	var body: some View {
 		ZStack{
 			if viewModel.isUnlocked {
@@ -50,23 +50,31 @@ struct ContentView: View {
 							viewModel.addLocation()
 						} label: {
 							Image(systemName: "plus")
+								.padding()
+								.background(.black.opacity(0.75))
+								.foregroundColor(.white)
+								.font(.title)
+								.clipShape(Circle())
+								.padding(.trailing)
 						}
-						.padding()
-						.background(.black.opacity(0.75))
-						.foregroundColor(.white)
-						.font(.title)
-						.clipShape(Circle())
-						.padding(.trailing)
+						
 					}
 				}
 			} else {
 				Button("Unlock Places") {
 					viewModel.authenticate()
+					if !viewModel.isUnlocked{
+						showingAlert = true
+					}
 				}
+				
 				.padding()
 				.background(.blue)
 				.foregroundColor(.white)
 				.clipShape(Capsule())
+				.alert(viewModel.authenticationErrorMessage, isPresented: $showingAlert){
+					Button("OK", role: .cancel) { }
+				}
 			}
 		}
 		.sheet(item: $viewModel.selectedPlace) { place in
